@@ -1,1 +1,1 @@
-__author__ = 'James Royal'
+from ids import IDS

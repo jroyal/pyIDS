@@ -1,6 +1,3 @@
-__author__ = 'jhroyal'
-
-
 class Workitem:
     def __init__(self, obj):
         if "workItem" not in obj["workitem"]:

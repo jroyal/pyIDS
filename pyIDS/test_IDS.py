@@ -1,7 +1,6 @@
 from unittest import TestCase
 from ids import IDS
 from workitem import Workitem
-__author__ = 'jhroyal'
 
 
 class TestIDS(TestCase):
