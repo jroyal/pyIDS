@@ -2,15 +2,17 @@ import requests
 import xmltodict
 from workitem import Workitem
 
+# Suppress the warnings for now
+requests.packages.urllib3.disable_warnings()
+
+
 class IDS(object):
     '''
     A class to encapsulate the work needed to send REST calls to the IBM Devops Service RTC backend.
     '''
     def __init__(self, url, user, password):
-        # Creating a RTCClient
         self.base_url = url
         self.session = self.create_session(user, password)
-        print "IDS created"
 
     def create_session(self, jazz_user, jazz_password):
         session = requests.Session()
@@ -21,33 +23,28 @@ class IDS(object):
 
         # Request for authenticated resource
         auth_uri = "/authenticated/identity"
-        print self.base_url + auth_uri
         response = session.get(self.base_url + auth_uri, verify=False)
 
-        if 'x-com-ibm-team-repository-web-auth-msg' in response.headers and response.headers['x-com-ibm-team-repository-web-auth-msg'] == 'authrequired':
-            login_response = session.post(self.base_url + '/j_security_check',
-                                               data={'j_username': jazz_user, 'j_password': jazz_password})
-
-            if 'x-com-ibm-team-repository-web-auth-msg' in login_response.headers and login_response.headers['x-com-ibm-team-repository-web-auth-msg'] == 'authrequired':
-                # Failed to authenticate
-                raise Exception("Failed to login: ", login_response.text)
-
-            # Getting authenticated resource again now that we should be logged in
-            response = session.get(self.base_url + auth_uri)
+        if response.status_code == 200:
+            return session
+        elif response.status_code == 401:
+            raise Exception("Failed to login! Make sure your username and password are correct.")
         else:
-            print "Already authenticated."
-        return session
+            raise Exception("Unknown error during session create. Response code: %s" % response.status_code)
 
     def get(self, url):
         return self.session.get(self.base_url + url, verify=False)
 
-    def get_work_item(self, itemNumber):
+    def get_work_items(self, **filters):
         '''
         Get a work item's information
-        :param itemNumber: The work item ID number
-        :return: Workitem or None
+        :param filters: A series of key value pairs to filter on
+        :return: list of Workitems or None
         '''
-        url = "/rpt/repository/workitem?fields=workitem/workItem[id=%s]/(" \
+        filter_string = ""
+        for key, val in filters.iteritems():
+            filter_string += "%s='%s'" % (key, val)
+        url = "/rpt/repository/workitem?fields=workitem/workItem[%s]/(" \
               "*|\
                owner/name|\
                state/name|\
@@ -61,14 +58,42 @@ class IDS(object):
                tags/*|\
                priority/*|\
                severity/*\
-               )" % itemNumber
+               )" % filter_string
+        print url
         try:
             response = self.get(url)
         except requests.exceptions.ReadTimeout:
             return "Request timed out :("
+
+        if response.status_code != 200:
+            print response.status_code
+            return None
+
         output = xmltodict.parse(response.text)
         if "workItem" not in output["workitem"]:
             return None
         else:
             workitem = Workitem(output)
-        return workitem
+        return [workitem]
+
+    def get_work_item_by_id(self, wi_id):
+        '''
+        Retrieves a single work item based off of the supplied ID
+
+        :param wi_id: The work item ID number
+        :return: Workitem or None
+        '''
+        work_items = self.get_work_items(id=wi_id)
+        if work_items is not None:
+            return work_items[0]
+        return None
+
+    def get_work_items_by_owner(self, wi_owner):
+        '''
+        Retrieves a list of work items owned by the supplied name
+
+        :param wi_owner: The name of the owner to filter for
+        :return: List of Workitems or None
+        '''
+        owner_filter = {"owner/name": wi_owner}
+        return self.get_work_items(**owner_filter)
