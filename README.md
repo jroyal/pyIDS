@@ -28,6 +28,8 @@ client = IDS("https://hub.jazz.net/ccm10", "user", "pass")
 
 workitem = client.get_work_item_by_id("16219")
 
+my_workitems = client.get_work_items_by_owner("James Royal")
+
 print workitem.id
 print workitem.description
 print workitem.priority
