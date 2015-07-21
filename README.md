@@ -26,7 +26,7 @@ from pyIDS import IDS
 
 client = IDS("https://hub.jazz.net/ccm10", "user", "pass")
 
-workitem = client.get_work_item("16219")
+workitem = client.get_work_item_by_id("16219")
 
 print workitem.id
 print workitem.description
