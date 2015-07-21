@@ -73,8 +73,13 @@ class IDS(object):
         if "workItem" not in output["workitem"]:
             return None
         else:
-            workitem = Workitem(output)
-        return [workitem]
+            workitems = []
+            if isinstance(output["workitem"]["workItem"], list):
+                for wi in output["workitem"]["workItem"]:
+                    workitems.append(Workitem(wi))
+            else:
+                workitems.append(Workitem(output["workitem"]["workItem"]))
+            return workitems
 
     def get_work_item_by_id(self, wi_id):
         '''

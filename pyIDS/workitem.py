@@ -1,8 +1,5 @@
 class Workitem:
     def __init__(self, obj):
-        if "workItem" not in obj["workitem"]:
-            raise "Invalid Workitem"
-        obj = obj["workitem"]["workItem"]
         self.id = obj["id"]
         self.summary = obj["summary"]
         self.description = obj["description"]
@@ -24,8 +21,10 @@ class Workitem:
                               "creationDate": comment["creationDate"]} for comment in obj["comments"]]
 
         # TODO: Allow a tag to contain a pipe. At the moment it splits them.
-        if "tags" in obj:
+        if obj["tags"] is not None:
             self.tags = obj["tags"].split("|")
+        else:
+            self.tags = None
 
         if "stringComplexity" in obj:
             self.points = obj["stringComplexity"]

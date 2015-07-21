@@ -6,7 +6,7 @@ from workitem import Workitem
 class TestIDS(TestCase):
     @classmethod
     def setUpClass(self):
-        self.ids = IDS("https://hub.jazz.net/ccm10", "user", "pass")
+        self.ids = IDS("https://hub.jazz.net/ccm10", "", "")
 
     def test_create_session(self):
         assert self.ids.session is not None
