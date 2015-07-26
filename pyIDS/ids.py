@@ -59,14 +59,12 @@ class IDS(object):
                priority/*|\
                severity/*\
                )" % filter_string
-        print url
         try:
             response = self.get(url)
         except requests.exceptions.ReadTimeout:
             return "Request timed out :("
 
         if response.status_code != 200:
-            print response.status_code
             return None
 
         output = xmltodict.parse(response.text)
