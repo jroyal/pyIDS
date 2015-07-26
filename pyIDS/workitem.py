@@ -16,9 +16,14 @@ class Workitem:
         self.due_date = obj["dueDate"]
 
         if "comments" in obj:
-            self.comments = [{"comment": comment["content"],
-                              "creator": comment["creator"]["name"],
-                              "creationDate": comment["creationDate"]} for comment in obj["comments"]]
+            if not isinstance(obj["comments"], list):
+                self.comments = [{"comment": obj["comments"]["content"],
+                                  "creator": obj["comments"]["creator"]["name"],
+                                  "creationDate": obj["comments"]["creationDate"]}]
+            else:
+                self.comments = [{"comment": comment["content"],
+                                  "creator": comment["creator"]["name"],
+                                  "creationDate": comment["creationDate"]} for comment in obj["comments"]]
 
         # TODO: Allow a tag to contain a pipe. At the moment it splits them.
         if obj["tags"] is not None:
